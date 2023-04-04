@@ -1,1 +1,0 @@
-# BCG-signal-quality-assessment
