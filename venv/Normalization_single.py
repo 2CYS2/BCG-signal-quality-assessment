@@ -27,10 +27,10 @@ def test(filepath, filename):
     # features = np.delete(features, nan_con, axis=0)  # 执行删除
     # # print(np.shape(features))
 
-    # 补充特征中的异常值（nan和inf）用同类别平均值填充
+    # 补充特征中的nan值用同类别的平均值填充
     nan_con = np.where(np.isnan(features))
-    features_pass = np.delete(features, nan_con, axis=0)  # 执行删除
-    kind_num = np.unique(features[nan_con[0], num])
+    features_pass1 = np.delete(features, nan_con, axis=0)  # 执行删除，以此作为过渡数据
+    kind_num1 = np.unique(features[nan_con[0], num])
     mean_same = []
     # for k in kind_num:
     #     print("k = ", k)
@@ -39,12 +39,12 @@ def test(filepath, filename):
     # print(np.shape(mean_same))
     for i in range(0, len(nan_con[0])):
         # print(features[nan_con[0][i], nan_con[1][i]])
-        for k in kind_num:
-            same_index = np.argwhere(features_pass[:, num] == k)
-            mean_same = (np.mean(features_pass[same_index, :], axis=0))
+        for k in kind_num1:
+            same_index1 = np.argwhere(features_pass1[:, num] == k)
+            mean_same1 = (np.mean(features_pass1[same_index1, :], axis=0))
             if features[nan_con[0][i], num] == k:
                 # print("k = ", k)
-                features[nan_con[0][i], nan_con[1][i]] = mean_same[0][nan_con[1][i]]
+                features[nan_con[0][i], nan_con[1][i]] = mean_same1[0][nan_con[1][i]]
                 # print(mean_same[0][nan_con[1][i]])
             # elif features[nan_con[0][i], 17] == 2:
             #     features[nan_con[0][i], nan_con[1][i]] = mean_same[1][0][nan_con[1][i]]
@@ -54,12 +54,21 @@ def test(filepath, filename):
             #     print(mean_same[2][0][nan_con[1][i]])
     # nan_con = np.where(np.isnan(features))
     print("文件%s的nan位置为：" % filename, nan_con)
-    features = np.delete(features, nan_con, axis=0)  # 执行删除
+    # features = np.delete(features, nan_con, axis=0)  # 执行删除
     # print(np.shape(features))
 
-    inf_con = np.where(np.isinf(features))[0]
+    inf_con = np.where(np.isinf(features))
+    features_pass2 = np.delete(features, inf_con, axis=0)  # 执行删除，以此作为过渡数据
+    kind_num2 = np.unique(features[inf_con[0], num])
+    for i2 in range(0, len(inf_con[0])):
+        # print(features[nan_con[0][i], nan_con[1][i]])
+        for k2 in kind_num2:
+            same_index2 = np.argwhere(features_pass2[:, num] == k2)
+            mean_same2 = (np.mean(features_pass2[same_index2, :], axis=0))
+            if features[inf_con[0][i2], num] == k2:
+                features[inf_con[0][i2], inf_con[1][i2]] = mean_same2[0][inf_con[1][i2]]
     print("文件%s的inf位置为：" % filename, inf_con)
-    features = np.delete(features, inf_con, axis=0)  # 执行删除
+    # features = np.delete(features, inf_con, axis=0)  # 执行删除
     # print(np.shape(features))
 
     features_new = []
@@ -80,18 +89,21 @@ def Normalization(sqi):
     :return:
     """
 
-    norm_sqi = preprocessing.scale(sqi)     # Z-score标准化
-    # norm_sqi = (sqi - np.min(sqi)) / (np.max(sqi) - np.min(sqi))      # 归一化
+    # norm_sqi = preprocessing.scale(sqi)     # Z-score标准化
+    norm_sqi = (sqi - np.min(sqi)) / (np.max(sqi) - np.min(sqi))      # 归一化
+    # norm_sqi = sqi      # 归一化
 
     return norm_sqi
 
 
 if __name__ == '__main__':
-    filepath = r"E:\研一\信号质量评估\result4.1\10s/"
+    filepath = r"E:\研一\信号质量评估\result11.8\10s/"
     filenames = os.listdir(filepath)  # 获取该文件夹中所有样本的特征结果
-    # filenames = ['282.txt']  # 获取该文件夹中所有样本的特征结果
+    # filenames = np.loadtxt(r"E:\研一\信号质量评估\file_num.txt", encoding='utf-8')
+    # filenames = ['229', '286', '1354']  # 获取该文件夹中所有样本的特征结果
     # scale = 30  # 信号质量评估的时间尺度
     for filename in filenames:
-            feature_new = test(filepath, filename)
-            # with open(os.path.join(r"E:\研一\信号质量评估\Result_new\result_norm_10/", filename)) as f:
-            np.savetxt(os.path.join(r"E:\研一\信号质量评估\result4.1\delete_nan_inf4.1\norm_10s/", filename), feature_new, fmt='%.6f', delimiter='    ')
+        # filename = filename + '.txt'
+        feature_new = test(filepath, filename)
+        # with open(os.path.join(r"E:\研一\信号质量评估\Result_new\result_norm_10/", filename)) as f:
+        np.savetxt(os.path.join(r"E:\研一\信号质量评估\result11.8\normalization/10s/", filename), feature_new, fmt='%.6f\t', delimiter='\t')

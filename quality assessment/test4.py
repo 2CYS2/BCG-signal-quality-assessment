@@ -20,7 +20,7 @@ from sklearn.inspection import permutation_importance
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
 from sklearn.model_selection import train_test_split, StratifiedKFold
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 import matplotlib.pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
 from xgboost import XGBClassifier
@@ -38,17 +38,19 @@ def importance(name):
     plt.barh(np.array(feature_names)[sorted_idx], np.array(perm_importance.importances_mean)[sorted_idx])
 
 
+def plot_confusion_matrix(cm, title='Confusion Matrix', labels=['A', 'B', 'C']):
+    plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+    plt.title(title)
+    plt.colorbar()
+    xlocations = np.array(range(len(labels)))
+    plt.xticks(xlocations, labels, rotation=90)
+    plt.yticks(xlocations, labels)
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+
+
 # 混淆矩阵
 def cmpic(y_true, y_pred, i):
-    def plot_confusion_matrix(cm, title='Confusion Matrix', labels=['A', 'B', 'C']):
-        plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
-        plt.title(title)
-        plt.colorbar()
-        xlocations = np.array(range(len(labels)))
-        plt.xticks(xlocations, labels, rotation=90)
-        plt.yticks(xlocations, labels)
-        plt.ylabel('True label')
-        plt.xlabel('Predicted label')
 
     cm = confusion_matrix(y_true, y_pred)
     labels = np.arange(len(cm))
@@ -197,8 +199,8 @@ def model_construct(X_train, X_test, y_train, y_test, show_confusion):
 
 if __name__ == "__main__":
     # 数据文件路径
-    filepath = r"E:\研一\信号质量评估\result3.21\delete_nan_inf3.29\norm_10s/"
-    saveroot = r"E:\研一\信号质量评估\result3.21\classify_result3.26分层交叉\10s/"
+    filepath =  r"E:\研一\信号质量评估\result4.9\normalization\10s/"
+    saveroot = r"E:\研一\信号质量评估\result4.9\normalization\留一法\10s/"
     # filenames = np.loadtxt(r"E:\研一\信号质量相关性统计\小论文\结果汇总\2.22更新\result2\余老师绘图\file_num.txt", encoding='utf-8')
     label = ('RF', 'DT', 'KNN', 'XG', 'Lgb', 'Cb')
 
@@ -217,36 +219,64 @@ if __name__ == "__main__":
     # filenames_test = ['971.txt', '935.txt', '966.txt', '541.txt']
     acc_result = []
     scores_rf, scores_dt, scores_knn, scores_xg, scores_lgb, scores_cb = [], [], [], [], [], []
-    for k in range(0, 5):
-        filenames = np.loadtxt(r"E:\研一\信号质量相关性统计\小论文\结果汇总\2.22更新\result2\余老师绘图\file_num.txt", encoding='utf-8').tolist()
+    # for k in range(0, 5):   # 按患病程度分层抽样交叉验证
+    #     filenames = np.loadtxt(r"E:\研一\信号质量相关性统计\小论文\结果汇总\2.22更新\result2\余老师绘图\file_num.txt", encoding='utf-8').tolist()
+    #     print("------------------第 %.0f 折-----------------" % (k + 1))
+    #     filename1 = sample(list(filenames[5:19]), 1)
+    #     filename2 = sample(list(filenames[19:27]), 1)
+    #     filename3 = sample(list(filenames[27:40]), 1)
+    #     # print(filename3)
+    #     filenames_test = [filenames[k], filename1[0], filename2[0], filename3[0]]
+    #     # filenames_test = [filenames[k], filename1[0], filename1[1], filename1[2], filename2[0], filename2[1], filename3[0], filename3[1], filename3[2]]
+    #     print(filenames_test)
+    #     for i in filenames_test:
+    #         filenames.remove(i)
+    #     filenames_train = filenames
+    #
+    #     feature_train = np.loadtxt(os.path.join(filepath, str(int(filenames_train[0]))+'.txt'), encoding='utf-8')
+    #     for f1 in range(1, 36):
+    #         # print(filenames_train[f1])
+    #         feature_file = np.loadtxt(os.path.join(filepath, str(int(filenames_train[f1]))+'.txt'), encoding='utf-8')
+    #         feature_train = np.vstack((feature_train, feature_file))
+    #     print(np.shape(feature_train))
+    #     # np.savetxt(r"E:\研一\信号质量评估\result3.13\delete_nan_inf\train.txt", feature_train, fmt='%.4f\t')
+    #
+    #     feature_test = np.loadtxt(os.path.join(filepath, str(int(filenames_test[0]))+'.txt'), encoding='utf-8')
+    #     for f2 in range(1, 4):
+    #         # print(filenames_test[f2])
+    #         feature_file = np.loadtxt(os.path.join(filepath, str(int(filenames_test[f2]))+'.txt'), encoding='utf-8')
+    #         feature_test = np.vstack((feature_test, feature_file))
+    #     print(np.shape(feature_test))
+    # #
+    for k in range(0, 1):     # 按顺序十折交叉验证
         print("------------------第 %.0f 折-----------------" % (k + 1))
-        filename1 = sample(list(filenames[5:19]), 1)
-        filename2 = sample(list(filenames[19:27]), 1)
-        filename3 = sample(list(filenames[27:40]), 1)
-        # print(filename3)
-        filenames_test = [filenames[k], filename1[0], filename2[0], filename3[0]]
-        # filenames_test = [filenames[k], filename1[0], filename1[1], filename1[2], filename2[0], filename2[1], filename3[0], filename3[1], filename3[2]]
+        filenames = os.listdir(filepath)
+        # filenames_test = filenames[k:k + 1]
+        # filenames_test = ['971.txt', '935.txt', '966.txt', '541.txt']
+        filenames_test = ['971.txt']
+        file_num = int(filenames_test[0].split('.txt')[0])
         print(filenames_test)
         for i in filenames_test:
             filenames.remove(i)
         filenames_train = filenames
 
-        feature_train = np.loadtxt(os.path.join(filepath, str(int(filenames_train[0]))+'.txt'), encoding='utf-8')
-        for f1 in range(1, 36):
+        feature_train = np.loadtxt(os.path.join(filepath, filenames_train[0]), encoding='utf-8')
+        for f1 in range(1, 39):
             # print(filenames_train[f1])
-            feature_file = np.loadtxt(os.path.join(filepath, str(int(filenames_train[f1]))+'.txt'), encoding='utf-8')
+            feature_file = np.loadtxt(os.path.join(filepath, filenames_train[f1]), encoding='utf-8')
             feature_train = np.vstack((feature_train, feature_file))
         print(np.shape(feature_train))
         # np.savetxt(r"E:\研一\信号质量评估\result3.13\delete_nan_inf\train.txt", feature_train, fmt='%.4f\t')
 
-        feature_test = np.loadtxt(os.path.join(filepath, str(int(filenames_test[0]))+'.txt'), encoding='utf-8')
-        for f2 in range(1, 4):
-            # print(filenames_test[f2])
-            feature_file = np.loadtxt(os.path.join(filepath, str(int(filenames_test[f2]))+'.txt'), encoding='utf-8')
-            feature_test = np.vstack((feature_test, feature_file))
-        print(np.shape(feature_test))
+        feature_test = np.loadtxt(os.path.join(filepath, filenames_test[0]), encoding='utf-8')
+        # for f2 in range(1, 4):
+        #     # print(filenames_test[f2])
+        #     feature_file = np.loadtxt(os.path.join(filepath, filenames_test[f2]), encoding='utf-8')
+        #     feature_test = np.vstack((feature_test, feature_file))
+        # print(np.shape(feature_test))
+        #
         # np.savetxt(r"E:\研一\信号质量评估\result3.13\delete_nan_inf\test.txt", feature_test, fmt='%.4f\t')
-
+        #
         # feature_verify = np.loadtxt(os.path.join(filepath, filenames_verify[0]), encoding='utf-8')
         # for f3 in range(1, 8):
         #     print(filenames_train[f3])
@@ -260,10 +290,10 @@ if __name__ == "__main__":
         # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=2)
         # X_train, X_verify, y_train, y_verify = train_test_split(X, y, test_size=0.25, random_state=2)
 
-        X_train = feature_train[:, (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)]
-        y_train = feature_train[:, 17]
-        X_test = feature_test[:, (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)]
-        y_test = feature_test[:, 17]
+        X_train = feature_train[:, (1,2,6,7,8,9,10,11,12,13,14,15,16,19,20)]
+        y_train = feature_train[:, 21]
+        X_test = feature_test[:, (1,2,6,7,8,9,10,11,12,13,14,15,16,19,20)]
+        y_test = feature_test[:, 21]
         # X_verify = feature_verify[:, 1:14]
         # y_verify = feature_verify[:, 14]
         # print("%s的结果为：" % filename)
@@ -277,59 +307,74 @@ if __name__ == "__main__":
         # print("1、随机森林验证集准确率为: %.2f%%" % (score1_verify * 100.0))
         print("1、随机森林测试集准确率为: %.2f%%" % (score1_test * 100.0))
 
-        # 2、决策树模型
-        clf = tree.DecisionTreeClassifier(max_depth=22)
-        clf = clf.fit(X_train, y_train)
-        # y_pred2_verify = clf.predict(X_verify)
-        # score2_verify = np.mean(y_pred2_verify == y_verify)
-        y_pred2_test = clf.predict(X_test)
-        score2_test = np.mean(y_pred2_test == y_test)
-        # print("2、决策树模型验证集准确率为：%.2f%%" % (score2_verify * 100.0))
-        print("2、决策树模型测试集准确率为：%.2f%%" % (score2_test * 100.0))
-
-        # 3、K近邻模型
-        knn = KNeighborsClassifier(n_neighbors=3)  # n_neighbors=1表示k=1
-        knn = knn.fit(X_train, y_train)
-        # y_pred3_verify = knn.predict(X_verify)
-        # score3_verify = accuracy_score(y_verify, y_pred3_verify)
-        y_pred3_test = knn.predict(X_test)
-        score3_test = accuracy_score(y_test, y_pred3_test)
-        # print("3、k近邻模型验证集准确率为: %.2f%%" % (score3_verify * 100.0))
-        print("3、k近邻模型测试集准确率为: %.2f%%" % (score3_test * 100.0))
+        # # 2、决策树模型
+        # clf = tree.DecisionTreeClassifier(max_depth=22)
+        # clf = clf.fit(X_train, y_train)
+        # # y_pred2_verify = clf.predict(X_verify)
+        # # score2_verify = np.mean(y_pred2_verify == y_verify)
+        # y_pred2_test = clf.predict(X_test)
+        # score2_test = np.mean(y_pred2_test == y_test)
+        # # print("2、决策树模型验证集准确率为：%.2f%%" % (score2_verify * 100.0))
+        # print("2、决策树模型测试集准确率为：%.2f%%" % (score2_test * 100.0))
         #
-        # 4、XGboost模型
-        xg = XGBClassifier(eval_metric='mlogloss')
-        xg.fit(X_train, y_train)
-        # y_pred4_verify = model.predict(X_verify)
-        # score4_verify = accuracy_score(y_verify, y_pred4_verify)
-        y_pred4_test = xg.predict(X_test)
-        score4_test = accuracy_score(y_test, y_pred4_test)
-        # print("4、XGboost模型验证集准确率: %.2f%%" % (score4_verify * 100.0))
-        print("4、XGboost模型测试集准确率: %.2f%%" % (score4_test * 100.0))
+        # # 3、K近邻模型
+        # knn = KNeighborsClassifier(n_neighbors=3)  # n_neighbors=1表示k=1
+        # knn = knn.fit(X_train, y_train)
+        # # y_pred3_verify = knn.predict(X_verify)
+        # # score3_verify = accuracy_score(y_verify, y_pred3_verify)
+        # y_pred3_test = knn.predict(X_test)
+        # score3_test = accuracy_score(y_test, y_pred3_test)
+        # # print("3、k近邻模型验证集准确率为: %.2f%%" % (score3_verify * 100.0))
+        # print("3、k近邻模型测试集准确率为: %.2f%%" % (score3_test * 100.0))
         # #
-        # 5、LightGBM模型
-        LGBM = lgb.LGBMClassifier(num_leaves=20, learning_rate=0.05, n_estimators=20)
-        LGBM.fit(X_train, y_train)
-        # y_pred5_verify = model.predict(X_verify)
-        # score5_verify = accuracy_score(y_verify, y_pred5_verify)
-        y_pred5_test = LGBM.predict(X_test)
-        score5_test = accuracy_score(y_test, y_pred5_test)
-        # print('5、LightGBM模型验证集准确率: %.2f%%' % (score5_verify * 100))
-        print('5、LightGBM模型测试集准确率: %.2f%%' % (score5_test * 100))
+        # # 4、XGboost模型
+        # xg = XGBClassifier(eval_metric='mlogloss')
+        # xg.fit(X_train, y_train)
+        # # y_pred4_verify = model.predict(X_verify)
+        # # score4_verify = accuracy_score(y_verify, y_pred4_verify)
+        # y_pred4_test = xg.predict(X_test)
+        # score4_test = accuracy_score(y_test, y_pred4_test)
+        # # print("4、XGboost模型验证集准确率: %.2f%%" % (score4_verify * 100.0))
+        # print("4、XGboost模型测试集准确率: %.2f%%" % (score4_test * 100.0))
         #
-        # 6、CatBoost模型
-        cb = CatBoostClassifier(iterations=12, learning_rate=0.05, depth=10)
-        cb.fit(X_train, y_train, verbose=False)
-        # y_pred6_verify = cb.predict(X_verify)
-        # score6_verify = accuracy_score(y_verify, y_pred6_verify)
-        y_pred6_test = cb.predict(X_test)
-        score6_test = accuracy_score(y_test, y_pred6_test)
-        # print('6、CatBoost模型验证集准确率: %.2f%%' % (score6_verify * 100))
-        print('6、CatBoost模型测试集准确率: %.2f%%' % (score6_test * 100))
+        # # 5、LightGBM模型
+        # LGBM = lgb.LGBMClassifier(num_leaves=20, learning_rate=0.05, n_estimators=20)
+        # LGBM.fit(X_train, y_train)
+        # # y_pred5_verify = model.predict(X_verify)
+        # # score5_verify = accuracy_score(y_verify, y_pred5_verify)
+        # y_pred5_test = LGBM.predict(X_test)
+        # score5_test = accuracy_score(y_test, y_pred5_test)
+        # # print('5、LightGBM模型验证集准确率: %.2f%%' % (score5_verify * 100))
+        # print('5、LightGBM模型测试集准确率: %.2f%%' % (score5_test * 100))
+        # #
+        # # 6、CatBoost模型
+        # cb = CatBoostClassifier(iterations=12, learning_rate=0.05, depth=10)
+        # cb.fit(X_train, y_train, verbose=False)
+        # # y_pred6_verify = cb.predict(X_verify)
+        # # score6_verify = accuracy_score(y_verify, y_pred6_verify)
+        # y_pred6_test = cb.predict(X_test)
+        # score6_test = accuracy_score(y_test, y_pred6_test)
+        # # print('6、CatBoost模型验证集准确率: %.2f%%' % (score6_verify * 100))
+        # print('6、CatBoost模型测试集准确率: %.2f%%' % (score6_test * 100))
+        #
+        # # 7、AdaBoost模型
+        # print("7、AdaBoost模型")
+        # Ada = AdaBoostClassifier(tree.DecisionTreeClassifier(max_depth=35, min_samples_split=30, min_samples_leaf=5), \
+        #                          algorithm="SAMME", n_estimators=35, learning_rate=0.1, random_state=42)
+        # # scores6 = cross_val_score(cb, X, y, cv=strKFold)
+        # # print("Cross validation scores:{}".format(scores6))
+        # # print("Mean cross validation score:{:2f}".format(scores6.mean()))
+        # # for k, (train, test) in enumerate(kfold):
+        # Ada.fit(X_train, y_train)
+        # score7_test = Ada.score(X_test, y_test)
+        # print('7、AdaBoost模型模型测试集准确率: %.2f%%' % (score7_test * 100))
+        # print(score)
 
-        # score_result = [(file_num, score1_test, score2_test, score3_test, score4_test, score5_test, score6_test)]
-        # with open(os.path.join(saveroot, 'score-isqi2.txt'), 'a+') as file:
+        # score_result = [(k, score1_test, score2_test, score3_test, score4_test, score5_test, score6_test, score7_test)]
+        # score_result = [(k, score1_test, score4_test, score5_test, score7_test)]
+        # with open(os.path.join(saveroot, 'feature_cut.txt'), 'a+') as file:
         #     np.savetxt(file, score_result, fmt='%.4f\t', delimiter=' ')
+
         # acc_result.append(score5_test * 100.0)
     # print(acc_result)
         # # #
@@ -341,12 +386,17 @@ if __name__ == "__main__":
         #         np.savetxt(f, result_all, fmt='%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t', delimiter='\t')
 
         # 各分类器性能
-        # class_names = ['A', 'B', 'C']
-        # print("1、随机森林的性能评估：\n", classification_report(y_test, y_pred1_test, target_names=class_names))
+        class_names = ['A', 'B', 'C']
+        print("1、随机森林的性能评估：\n", classification_report(y_test, y_pred1_test, target_names=class_names))
         # print("2、决策树的性能评估：\n", classification_report(y_test, y_pred2_test, target_names=class_names))
         # print("3、K近邻的性能评估：\n", classification_report(y_test, y_pred3_test, target_names=class_names))
         # print("4、KXGboost的性能评估：\n", classification_report(y_test, y_pred4_test, target_names=class_names))
-        #
+
+
+        plt.figure()
+        a = cmpic(y_test, y_pred1_test, 1)
+
+
         # y_pred = [y_pred1_test, y_pred2_test, y_pred3_test, y_pred4_test, y_pred5_test, y_pred6_test]
         # model = [RF, clf, knn, xg, LGBM, cb]
         # model_name = ['RF', 'DT', 'KNN', 'XGboost', 'LightGBM', 'Catboost']
@@ -362,4 +412,4 @@ if __name__ == "__main__":
         #     plt.subplot(3, 2, j + 1)
         #     importance(model[j])
         #     plt.xlabel("Permutation Importance: %s" % model_name[j])
-        # plt.show()
+        plt.show()

@@ -15,8 +15,8 @@ from catboost import CatBoostClassifier
 
 
 def importance(name):
-    feature_names = ['BSQI1', 'BSQI2', 'ISQI1', 'ISQI2', 'RsdSQI', 'ASQI', 'PSQI', 'CSQI', 'Avg_corr', 'SNR', 'SSQI',
-                     'KSQI', 'artiafct', 'Sampen', 'ASQI2', 'Rsd_corr', 'ISQI2_exp', 'RsdSQI_exp', 'ASQI2new']
+    feature_names = ['BSQI1', 'BSQI2', 'ISQI1', 'ISQI2', 'RsdSQI', 'ASQI1', 'ASQI2', 'PSQI', 'CSQI', 'Avg_corr',
+                     'Rsd_corr', 'SNR', 'SSQI', 'KSQI', 'artiafct', 'Sampen', 'MSQI', 'PURSQI', 'AJH', 'AJL']
     perm_importance = permutation_importance(name, X[test], y[test])
     # sorted_idx = perm_importance.importances_mean.argsort()
     # plt.barh(np.array(feature_names)[sorted_idx], np.array(perm_importance.importances_mean)[sorted_idx])
@@ -28,7 +28,7 @@ def importance(name):
 
 
 #混淆矩阵
-def cmpic(y_true, y_pred,i):
+def cmpic(y_true, y_pred, i):
         def plot_confusion_matrix(cm, title='Confusion Matrix', labels=['A','B','C']):
             plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
             plt.title(title)
@@ -188,22 +188,23 @@ def model_construct(X_train, X_test, y_train, y_test, show_confusion):
 
 if __name__=="__main__":
     # 数据文件路径
-    filepath = r"E:\研一\信号质量评估\result4.1\delete_nan_inf4.1\norm_10s/"
-    saveroot = r"E:\研一\信号质量评估\result4.1\classify_result4.1未调参\10s/"
+    filepath = r"E:\研一\信号质量评估\result11.8\normalization\10s/"
+    saveroot = r"E:\研一\信号质量评估\result11.8\normalization\个体内训练分类(获取特征重要性)/"
     # filepath2 = np.loadtxt(r'E:\研一\信号质量评估\Result_new\result_norm_10/B.txt')
     # filepath3 = np.loadtxt(r'E:\研一\信号质量评估\Result_new\result_norm_10/C.txt')
     # filepath = np.vstack((filepath1,filepath2,filepath3))
     label = ('RF', 'DT', 'KNN', 'XG', 'Lgb', 'Cb')
     # filenames = os.listdir(filepath)  # 获取该文件夹中所有样本的特征结果
-    filenames = np.loadtxt(r"E:\研一\信号质量相关性统计\小论文\结果汇总\2.22更新\result2\余老师绘图\file_num.txt", encoding='utf-8')
-    # filenames = [282]
+    filenames = np.loadtxt(r"E:\研一\信号质量评估\file_num_new.txt", encoding='utf-8')
+    # filenames = [955]
     # filenames = filenames[35:]
     for filename in filenames:
         file_num = int(filename)
         filename = str(int(filename))
+        print("正在处理：", filename + '.txt')
         feature_file = np.loadtxt(os.path.join(filepath, filename + '.txt'), encoding='utf-8')
-        X = feature_file[:, 1:20]
-        y = feature_file[:, 20]
+        X = feature_file[:, 1:21]
+        y = feature_file[:, 21]
         # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=2)
 
         print("%s的结果为：" % filename)
@@ -228,58 +229,58 @@ if __name__=="__main__":
             import_rf.append(importance(RF))
             # print(score)
         # RF.fit(X_train, y_train)
-        # y_pred1 = np.round(RF.predict(X_test))
+        #     y_pred1 = np.round(RF.predict(X[test]))
         # score1 = np.mean(y_pred1 == y_test)
         # print ("1、随机森林分类准确率为: %.2f%%" % (score1 * 100.0))
 
-        # 2、决策树模型
-            print("2、决策树模型")
-            clf = tree.DecisionTreeClassifier(max_depth=22)
-            # scores2 = cross_val_score(clf, X, y, cv=strKFold)
-            # print("Cross validation scores:{}".format(scores2))
-            # print("Mean cross validation score:{:2f}".format(scores2.mean()))
-            # for k, (train, test) in enumerate(kfold):
-            clf.fit(X[train], y[train])
-            score = clf.score(X[test], y[test])
-            scores_dt.append(score)
-            import_dt.append(importance(clf))
-            # print(score)
+        # # 2、决策树模型
+        #     print("2、决策树模型")
+        #     clf = tree.DecisionTreeClassifier(max_depth=22)
+        #     # scores2 = cross_val_score(clf, X, y, cv=strKFold)
+        #     # print("Cross validation scores:{}".format(scores2))
+        #     # print("Mean cross validation score:{:2f}".format(scores2.mean()))
+        #     # for k, (train, test) in enumerate(kfold):
+        #     clf.fit(X[train], y[train])
+        #     score = clf.score(X[test], y[test])
+        #     scores_dt.append(score)
+        #     # import_dt.append(importance(clf))
+        #     # print(score)
+        #
+        # # clf = clf.fit(X_train, y_train)
+        # # y_pred2 = clf.predict(X_test)
+        # # score2 = np.mean(y_pred2 == y_test)
+        # # print("2、决策树模型分类准确率为：%.2f%%" % (score2 * 100.0))
+        #
+        # # 3、K近邻模型
+        #     print("3、K近邻模型")
+        #     knn = KNeighborsClassifier(n_neighbors=3)  # n_neighbors=1表示k=1
+        #     # scores3 = cross_val_score(knn, X, y, cv=strKFold)
+        #     # print("Cross validation scores:{}".format(scores3))
+        #     # print("Mean cross validation score:{:2f}".format(scores3.mean()))
+        # # for k, (train, test) in enumerate(kfold):
+        #     knn.fit(X[train], y[train])
+        #     score = knn.score(X[test], y[test])
+        #     scores_knn.append(score)
+        #     # import_knn.append(importance(knn))
+        #     # print(score)
+        #
+        # # knn = knn.fit(X_train, y_train)
+        # # y_pred3 = knn.predict(X_test)
+        # # score3 = accuracy_score(y_test,y_pred3)
+        # # print("3、k近邻模型分类准确率为: %.2f%%" % (score3 * 100.0))
 
-        # clf = clf.fit(X_train, y_train)
-        # y_pred2 = clf.predict(X_test)
-        # score2 = np.mean(y_pred2 == y_test)
-        # print("2、决策树模型分类准确率为：%.2f%%" % (score2 * 100.0))
-
-        # 3、K近邻模型
-            print("3、K近邻模型")
-            knn = KNeighborsClassifier(n_neighbors=3)  # n_neighbors=1表示k=1
-            # scores3 = cross_val_score(knn, X, y, cv=strKFold)
-            # print("Cross validation scores:{}".format(scores3))
-            # print("Mean cross validation score:{:2f}".format(scores3.mean()))
-        # for k, (train, test) in enumerate(kfold):
-            knn.fit(X[train], y[train])
-            score = knn.score(X[test], y[test])
-            scores_knn.append(score)
-            import_knn.append(importance(knn))
-            # print(score)
-
-        # knn = knn.fit(X_train, y_train)
-        # y_pred3 = knn.predict(X_test)
-        # score3 = accuracy_score(y_test,y_pred3)
-        # print("3、k近邻模型分类准确率为: %.2f%%" % (score3 * 100.0))
-
-        # 4、XGboost模型
-            print("4、XGboost模型")
-            xg = XGBClassifier(eval_metric='mlogloss')
-            # scores4 = cross_val_score(xg, X, y, cv=strKFold)
-            # print("Cross validation scores:{}".format(scores4))
-            # print("Mean cross validation score:{:2f}".format(scores4.mean()))
-        # for k, (train, test) in enumerate(kfold):
-            xg.fit(X[train], y[train])
-            score = xg.score(X[test], y[test])
-            scores_xg.append(score)
-            import_xg.append(importance(xg))
-            # print(score)
+        # # 4、XGboost模型
+        #     print("4、XGboost模型")
+        #     xg = XGBClassifier(eval_metric='mlogloss')
+        #     # scores4 = cross_val_score(xg, X, y, cv=strKFold)
+        #     # print("Cross validation scores:{}".format(scores4))
+        #     # print("Mean cross validation score:{:2f}".format(scores4.mean()))
+        # # for k, (train, test) in enumerate(kfold):
+        #     xg.fit(X[train], y[train])
+        #     score = xg.score(X[test], y[test])
+        #     scores_xg.append(score)
+        #     import_xg.append(importance(xg))
+        #     # print(score)
 
         # xg.fit(X_train, y_train)
         # y_pred4 = xg.predict(X_test)
@@ -287,16 +288,16 @@ if __name__=="__main__":
         # print("4、XGboost模型分类准确率: %.2f%%" % (score4 * 100.0))
 
         # 5、LightGBM模型
-            print("5、LightGBM模型")
-            LGBM = lgb.LGBMClassifier(num_leaves=20, learning_rate=0.05, n_estimators=20)
-            # scores5 = cross_val_score(LGBM, X, y, cv=strKFold)
-            # print("Cross validation scores:{}".format(scores5))
-            # print("Mean cross validation score:{:2f}".format(scores5.mean()))
-        # for k, (train, test) in enumerate(kfold):
-            LGBM.fit(X[train], y[train])
-            score = LGBM.score(X[test], y[test])
-            scores_lgb.append(score)
-            import_lgb.append(importance(LGBM))
+        #     print("5、LightGBM模型")
+        #     LGBM = lgb.LGBMClassifier(num_leaves=20, learning_rate=0.05, n_estimators=20)
+        #     # scores5 = cross_val_score(LGBM, X, y, cv=strKFold)
+        #     # print("Cross validation scores:{}".format(scores5))
+        #     # print("Mean cross validation score:{:2f}".format(scores5.mean()))
+        # # for k, (train, test) in enumerate(kfold):
+        #     LGBM.fit(X[train], y[train])
+        #     score = LGBM.score(X[test], y[test])
+        #     scores_lgb.append(score)
+        #     import_lgb.append(importance(LGBM))
             # print(score)
 
         # LGBM.fit(X_train, y_train)
@@ -304,32 +305,32 @@ if __name__=="__main__":
         # score5 = accuracy_score(y_test, y_pred5)
         # print('5、LightGBM模型分类准确率: %.2f%%' % (score5*100))
 
-        # 6、CatBoost模型
-            print("6、CatBoost模型")
-            cb = CatBoostClassifier(iterations=12, learning_rate=0.05, depth=10, verbose=False)
-            # scores6 = cross_val_score(cb, X, y, cv=strKFold)
-            # print("Cross validation scores:{}".format(scores6))
-            # print("Mean cross validation score:{:2f}".format(scores6.mean()))
-        # for k, (train, test) in enumerate(kfold):
-            cb.fit(X[train], y[train])
-            score = cb.score(X[test], y[test])
-            scores_cb.append(score)
-            import_cb.append(importance(cb))
-            # print(score)
-        #
-        # 7、AdaBoost模型
-            print("7、AdaBoost模型")
-            Ada = AdaBoostClassifier(tree.DecisionTreeClassifier(max_depth=35, min_samples_split=30, min_samples_leaf=5), \
-                                     algorithm="SAMME", n_estimators=35, learning_rate=0.1, random_state=42)
-            # scores6 = cross_val_score(cb, X, y, cv=strKFold)
-            # print("Cross validation scores:{}".format(scores6))
-            # print("Mean cross validation score:{:2f}".format(scores6.mean()))
-        # for k, (train, test) in enumerate(kfold):
-            Ada.fit(X[train], y[train])
-            score = Ada.score(X[test], y[test])
-            scores_ada.append(score)
-            import_ada.append(importance(Ada))
-            # print(score)
+        # # 6、CatBoost模型
+        #     print("6、CatBoost模型")
+        #     cb = CatBoostClassifier(iterations=12, learning_rate=0.05, depth=10, verbose=False)
+        #     # scores6 = cross_val_score(cb, X, y, cv=strKFold)
+        #     # print("Cross validation scores:{}".format(scores6))
+        #     # print("Mean cross validation score:{:2f}".format(scores6.mean()))
+        # # for k, (train, test) in enumerate(kfold):
+        #     cb.fit(X[train], y[train])
+        #     score = cb.score(X[test], y[test])
+        #     scores_cb.append(score)
+        #     # import_cb.append(importance(cb))
+        #     # print(score)
+        # #
+        # # 7、AdaBoost模型
+        #     print("7、AdaBoost模型")
+        #     Ada = AdaBoostClassifier(tree.DecisionTreeClassifier(max_depth=35, min_samples_split=30, min_samples_leaf=5), \
+        #                              algorithm="SAMME", n_estimators=35, learning_rate=0.1, random_state=42)
+        #     # scores6 = cross_val_score(cb, X, y, cv=strKFold)
+        #     # print("Cross validation scores:{}".format(scores6))
+        #     # print("Mean cross validation score:{:2f}".format(scores6.mean()))
+        # # for k, (train, test) in enumerate(kfold):
+        #     Ada.fit(X[train], y[train])
+        #     score = Ada.score(X[test], y[test])
+        #     scores_ada.append(score)
+        #     import_ada.append(importance(Ada))
+        #     # print(score)
 
         # cb.fit(X_train, y_train, verbose=False)
         # y_pred6 = cb.predict(X_test)
@@ -337,52 +338,54 @@ if __name__=="__main__":
         # print('6、CatBoost模型分类准确率: %.2f%%' % (score6*100))
 
         print('平均准确率为: %.3f' %(np.mean(scores_rf)))
-        print('平均准确率为: %.3f' %(np.mean(scores_dt)))
-        print('平均准确率为: %.3f' %(np.mean(scores_knn)))
-        print('平均准确率为: %.3f' %(np.mean(scores_xg)))
-        print('平均准确率为: %.3f' %(np.mean(scores_lgb)))
-        print('平均准确率为: %.3f' %(np.mean(scores_cb)))
-        print('平均准确率为: %.3f' %(np.mean(scores_ada)))
-        print('准确率为:', scores_rf)
-        print('准确率为:', scores_dt)
-        print('准确率为:', scores_knn)
-        print('准确率为:', scores_xg)
-        print('准确率为:', scores_lgb)
-        print('准确率为:', scores_cb)
-        print('准确率为:', scores_ada)
-        score_result = [(file_num, np.mean(scores_rf), np.mean(scores_dt), np.mean(scores_knn), np.mean(scores_xg), np.mean(scores_lgb), np.mean(scores_cb), np.mean(scores_ada))]
+        # print('平均准确率为: %.3f' %(np.mean(scores_dt)))
+        # print('平均准确率为: %.3f' %(np.mean(scores_knn)))
+        # print('平均准确率为: %.3f' %(np.mean(scores_xg)))
+        # print('平均准确率为: %.3f' %(np.mean(scores_lgb)))
+        # # print('平均准确率为: %.3f' %(np.mean(scores_cb)))
+        # print('平均准确率为: %.3f' %(np.mean(scores_ada)))
+        print('各折运算的准确率为:', scores_rf)
+        # print('准确率为:', scores_dt)
+        # print('准确率为:', scores_knn)
+        # print('准确率为:', scores_xg)
+        # print('准确率为:', scores_lgb)
+        # # print('准确率为:', scores_cb)
+        # print('准确率为:', scores_ada)
+        # score_result = [(file_num, np.mean(scores_rf), np.mean(scores_dt), np.mean(scores_knn), np.mean(scores_xg), np.mean(scores_lgb), np.mean(scores_cb), np.mean(scores_ada))]
+        score_result = [(file_num, np.mean(scores_rf))]
         with open(os.path.join(saveroot, 'score.txt'), 'a+') as file:
             np.savetxt(file, score_result, fmt='%.4f\t', delimiter=' ')
 
         model_name = ['RF', 'DT', 'KNN', 'XGboost', 'LightGBM', 'Catboost', 'Adaboost']
+        # model_name = ['RF', 'XGboost', 'LightGBM', 'Adaboost']
         model = []
         model.append(import_rf)
-        model.append(import_dt)
-        model.append(import_knn)
-        model.append(import_xg)
-        model.append(import_lgb)
-        model.append(import_cb)
-        model.append(import_ada)
+        # model.append(import_dt)
+        # model.append(import_knn)
+        # model.append(import_xg)
+        # model.append(import_lgb)
+        # # model.append(import_cb)
+        # model.append(import_ada)
         with open(os.path.join(saveroot, model_name[0] + '.txt'), 'a+') as file1:
             np.savetxt(file1, np.mean(list(zip(import_rf)), axis=0), fmt='%.4f\t', delimiter=' ')
 
-        with open(os.path.join(saveroot, model_name[1] + '.txt'), 'a+') as file2:
-            np.savetxt(file2, np.mean(list(zip(import_dt)), axis=0), fmt='%.4f\t', delimiter=' ')
+        # with open(os.path.join(saveroot, model_name[1] + '.txt'), 'a+') as file2:
+        #     np.savetxt(file2, np.mean(list(zip(import_dt)), axis=0), fmt='%.4f\t', delimiter=' ')
+        #
+        # with open(os.path.join(saveroot, model_name[2] + '.txt'), 'a+') as file3:
+        #     np.savetxt(file3, np.mean(list(zip(import_knn)), axis=0), fmt='%.4f\t', delimiter=' ')
 
-        with open(os.path.join(saveroot, model_name[2] + '.txt'), 'a+') as file3:
-            np.savetxt(file3, np.mean(list(zip(import_knn)), axis=0), fmt='%.4f\t', delimiter=' ')
+        # with open(os.path.join(saveroot, model_name[3] + '.txt'), 'a+') as file4:
+        #     np.savetxt(file4, np.mean(list(zip(import_xg)), axis=0), fmt='%.4f\t', delimiter=' ')
+        #
+        # with open(os.path.join(saveroot, model_name[4] + '.txt'), 'a+') as file5:
+        #     np.savetxt(file5, np.mean(list(zip(import_lgb)), axis=0), fmt='%.4f\t', delimiter=' ')
 
-        with open(os.path.join(saveroot, model_name[3] + '.txt'), 'a+') as file4:
-            np.savetxt(file4, np.mean(list(zip(import_xg)), axis=0), fmt='%.4f\t', delimiter=' ')
+        # with open(os.path.join(saveroot, model_name[5] + '.txt'), 'a+') as file6:
+        #     np.savetxt(file6, np.mean(list(zip(import_cb)), axis=0), fmt='%.4f\t', delimiter=' ')
 
-        with open(os.path.join(saveroot, model_name[4] + '.txt'), 'a+') as file5:
-            np.savetxt(file5, np.mean(list(zip(import_lgb)), axis=0), fmt='%.4f\t', delimiter=' ')
-
-        with open(os.path.join(saveroot, model_name[5] + '.txt'), 'a+') as file6:
-            np.savetxt(file6, np.mean(list(zip(import_cb)), axis=0), fmt='%.4f\t', delimiter=' ')
-
-        with open(os.path.join(saveroot, model_name[6] + '.txt'), 'a+') as file7:
-            np.savetxt(file7, np.mean(list(zip(import_ada)), axis=0), fmt='%.4f\t', delimiter=' ')
+        # with open(os.path.join(saveroot, model_name[6] + '.txt'), 'a+') as file7:
+        #     np.savetxt(file7, np.mean(list(zip(import_ada)), axis=0), fmt='%.4f\t', delimiter=' ')
 
 
 
@@ -393,22 +396,25 @@ if __name__=="__main__":
         # with open(os.path.join(outputpath, filename), 'a+') as f:
         #         np.savetxt(f, result_all, fmt='%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t', delimiter='\t')
 
-        #各分类器性能
+        # #各分类器性能
         # class_names = ['A', 'B', 'C']
-        # print("1、随机森林的性能评估：\n", classification_report(y_test, y_pred1, target_names=class_names))
-        # print("2、决策树的性能评估：\n", classification_report(y_test, y_pred2, target_names=class_names))
-        # print("3、K近邻的性能评估：\n", classification_report(y_test, y_pred3, target_names=class_names))
-        # print("4、KXGboost的性能评估：\n", classification_report(y_test, y_pred4, target_names=class_names))
+        # print("1、随机森林的性能评估：\n", classification_report(y[test], y_pred1, target_names=class_names))
+        # # print("2、决策树的性能评估：\n", classification_report(y_test, y_pred2, target_names=class_names))
+        # # print("3、K近邻的性能评估：\n", classification_report(y_test, y_pred3, target_names=class_names))
+        # # print("4、KXGboost的性能评估：\n", classification_report(y_test, y_pred4, target_names=class_names))
+        #
+        # plt.figure()
+        # a = cmpic(y[test], y_pred1, 1)
 
         # y_pred = [y_pred1, y_pred2, y_pred3, y_pred4, y_pred5, y_pred6]
         # model = [RF, clf, knn, xg, LGBM, cb]
         # model_name = ['RF', 'DT', 'KNN', 'XGboost', 'LightGBM', 'Catboost']
         # #
-        # # fig1 = plt.figure(figsize=(15,8))
-        # # # plt.rcParams.update({'font.size': 20})
-        # # for i in range(0, 6):
-        # #     plt.subplot(2, 3, i+1)
-        # #     a = cmpic(y_test, y_pred[i], i+1)
+        # fig1 = plt.figure(figsize=(15,8))
+        # # plt.rcParams.update({'font.size': 20})
+        # for i in range(0, 6):
+        #     plt.subplot(2, 3, i+1)
+        #     a = cmpic(y_test, y_pred[i], i+1)
         # #
         # fig2 = plt.figure(figsize=(8,8))
         # for j in range(0, 6):
